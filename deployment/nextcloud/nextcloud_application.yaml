@@ -1,0 +1,229 @@
+# K3s Kubernetes Deployment for the Nextcloud application
+# https://nextcloud.com/
+# https://hub.docker.com/_/nextcloud
+# https://github.com/docker-library/docs/blob/master/nextcloud/README.md
+
+
+# Config map for the Nextcloud application pre-installation script
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nextcloud-post-install-script
+  namespace: nextcloud
+data:
+  # Manually execute: su -s /bin/sh www-data -c "./post-install.sh"
+  post-install.sh: |
+    #!/bin/sh
+    set -eu
+
+    # Set backgroundjobs mode to cron
+    php /var/www/html/occ config:app:set core backgroundjobs_mode --value cron
+
+    # Set maintenance window start
+    php /var/www/html/occ config:system:set maintenance_window_start --type=integer --value=1
+
+    # Allow local servers
+    php /var/www/html/occ config:system:set allow_local_remote_servers --value 1
+
+    # Set PHP memory limit
+    php /var/www/html/occ config:system:set memory_limit --value 2G
+
+    # Set PHP max execution time
+    php /var/www/html/occ config:system:set max_execution_time --value 3600
+
+    # Set PHP opcache memory consumption
+    php /var/www/html/occ config:system:set opcache.memory_consumption --value 512
+
+    # Set PHP opcache max accelerated files
+    php /var/www/html/occ config:system:set opcache.interned_strings_buffer --value 32
+
+    # Set PHP opcache max accelerated files
+    php /var/www/html/occ config:system:set opcache.max_accelerated_files --value 10000
+
+    # Set PHP opcache revalidate frequency
+    php /var/www/html/occ config:system:set opcache.revalidate_freq --value 60
+
+    # Run mimetype migration if it hasn't been done before
+    # if [ ! -f /var/www/html/.mimetype_migration_done ]; then
+    # php /var/www/html/occ maintenance:repair --include-expensive
+    # touch /var/www/html/.mimetype_migration_done
+    # fi
+
+    # Run mimetype migration
+    php /var/www/html/occ maintenance:mimetype:update-js
+    php /var/www/html/occ maintenance:mimetype:update-db
+    php /var/www/html/occ maintenance:repair --include-expensive
+
+    echo "Post-installation script completed."
+---
+# PersistentVolumeClaim for the Nextcloud application
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
+# Deployment for the Nextcloud application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      securityContext:
+        fsGroup: 33 # www-data group ID
+      # Anti affiniti to dispurse the pods across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nextcloud
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: nextcloud
+        image: docker.io/library/nextcloud:production-apache
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        env:
+        # Nextcloud settings
+        - name: NEXTCLOUD_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: admin-username
+        - name: NEXTCLOUD_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: admin-password
+        - name: NEXTCLOUD_INIT_HTACCESS
+          value: "true"
+        - name: PHP_UPLOAD_LIMIT
+          value: 8192M
+
+        # Apache settings
+        - name: APACHE_DISABLE_REWRITE_IP
+          value: "1"
+        - name: TRUSTED_PROXIES
+          value: 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 104.16.0.0/13 104.24.0.0/14 108.162.192.0/18 131.0.72.0/22 141.101.64.0/18 162.158.0.0/15 172.64.0.0/13 173.245.48.0/20 188.114.96.0/20 190.93.240.0/20 197.234.240.0/22 198.41.128.0/17
+        - name: OVERWRITEPROTOCOL
+          value: https
+        - name: NEXTCLOUD_TRUSTED_DOMAINS
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: trusted-domains
+        - name: APACHE_BODY_LIMIT
+          value: "9663676416"  # 9gb to allow large file uploads (8gb + 1gb for overhead)
+
+        # Database connection settings
+        - name: POSTGRES_HOST
+          value: nextcloud-postgresql
+        - name: POSTGRES_DB
+          value: nextcloud
+        - name: POSTGRES_USER
+          value: nextcloud
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: postgres-password
+
+        # Redis connection settings
+        - name: REDIS_HOST
+          value: nextcloud-redis
+        - name: REDIS_HOST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: redis-password
+        
+        # MinIO Tenant settings
+        - name: OBJECTSTORE_S3_BUCKET
+          value: "nextcloud"
+        - name: OBJECTSTORE_S3_REGION
+          value: "eu-west-rack-0"
+        - name: OBJECTSTORE_S3_HOST
+          value: "minio-tenant-hl.minio-tenant.svc.cluster.local"
+        - name: OBJECTSTORE_S3_PORT
+          value: "9000"
+        - name: OBJECTSTORE_S3_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: minio-tenant-access-key
+        - name: OBJECTSTORE_S3_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: minio-tenant-secret
+        - name: OBJECTSTORE_S3_SSL
+          value: "false"
+        - name: OBJECTSTORE_S3_USEPATH_STYLE
+          value: "true"
+        - name: OBJECTSTORE_S3_LEGACYAUTH
+          value: "false"
+        - name: OBJECTSTORE_S3_AUTOCREATE
+          value: "true"
+
+        volumeMounts:
+        - name: nextcloud-app
+          mountPath: /var/www/html
+        - name: post-install-script
+          mountPath: /docker-entrypoint-hooks.d/post-installation
+        - name: post-upgrade-script
+          mountPath: /docker-entrypoint-hooks.d/post-upgrade
+      volumes:
+      - name: nextcloud-app
+        persistentVolumeClaim:
+          claimName: nextcloud-pvc
+      - name: post-install-script
+        configMap:
+          name: nextcloud-post-install-script
+          defaultMode: 0755
+      - name: post-upgrade-script
+        configMap:
+          name: nextcloud-post-install-script
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  selector:
+    app: nextcloud
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

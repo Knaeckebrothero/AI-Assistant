@@ -3,9 +3,7 @@
 
 # Local environment
 .env
-
-# Yaml
-*.yaml
+.venv
 
 # SQLite database files
 *.db
@@ -55,7 +53,6 @@ coverage.xml
 *.war
 *.ear
 hs_err_pid*
-application.properties
 
 # JavaScript / React
 logs

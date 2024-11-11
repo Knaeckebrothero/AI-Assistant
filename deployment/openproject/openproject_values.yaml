@@ -1,0 +1,250 @@
+# Default values for openproject helm chart
+# The chart is mainly configured through global environment variables
+# https://github.com/opf/helm-charts/blob/main/charts/openproject/values.yaml
+# https://www.openproject.org/docs/installation-and-operations/configuration/environment/
+
+
+# If you encounter login problems you can change the admin password in the container console
+#1 RAILS_ENV=production bundle exec rails c
+#2 u = User.find_by_login "admin"
+#3 u.password=u.password_confirmation='my new password'
+#4 u.save
+
+
+affinity: {}
+appInit:
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      memory: 512Mi
+backgroundReplicaCount: 1
+cleanup:
+  deletePodsOnSuccess: true
+  deletePodsOnSuccessTimeout: 6000
+clusterDomain: cluster.local
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  enabled: true
+  readOnlyRootFilesystem: true
+  runAsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+dbInit:
+  image:
+    imagePullPolicy: Always
+    registry: docker.io
+    repository: postgres
+    tag: 13
+  resources:
+    limits:
+      memory: 200Mi
+    requests:
+      memory: 200Mi
+develop: false
+egress:
+  tls:
+    rootCA:
+      configMap: ''
+      fileName: ''
+environment:
+extraVolumeMounts: []
+extraVolumes: []
+fullnameOverride: ''
+global:
+  imagePullSecrets: []
+image:
+  imagePullPolicy: Always
+  registry: docker.io
+  repository: openproject/openproject
+  tag: 14.6.3-slim
+imagePullSecrets: []
+ingress:
+  annotations:
+    cert-manager.io/issuer: 'cloudflare-dns-issuer'
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '30'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '1800'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '1800'
+    traefik.ingress.kubernetes.io/router.middlewares: 'openproject-openproject-rewrite-host@kubernetescrd'
+  enabled: true
+  host: '<YOUR_DOMAIN>'
+  ingressClassName: 'traefik'
+  path: /
+  pathType: Prefix
+  tls:
+    enabled: true
+    secretName: 'openproject-tls'
+memcached:
+  bundled: true
+  connection:
+    host: null
+    port: null
+  global:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      enabled: true
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+nameOverride: ''
+nodeSelector: {}
+openproject:
+  admin_user:
+    mail: 'admin@example.net'
+    name: 'OpenProject Admin'
+    password: 'admin'
+    password_reset: 'true'
+  cache:
+    store: memcache
+  extraEnvVarsSecret: ''
+  host: '<YOUR_OPENPROJECT_HOST>'
+  hsts: true
+  https: true
+  oidc:
+    attribute_map: {}
+    authorizationEndpoint: ''
+    displayName: Keycloak
+    enabled: false
+    endSessionEndpoint: ''
+    existingSecret: null
+    extraOidcSealedSecret: null
+    host: ''
+    identifier: ''
+    provider: Keycloak
+    scope: '[openid]'
+    secret: ''
+    secretKeys:
+      identifier: clientId
+      secret: clientSecret
+    tokenEndpoint: ''
+    userinfoEndpoint: ''
+  postgresStatementTimeout: 120s
+  railsRelativeUrlRoot: null
+  seed_locale: en
+  tmpVolumesAnnotations: {}
+  tmpVolumesLabels: {}
+  tmpVolumesStorage: 5Gi
+  tmpVolumesStorageClassName: null
+  useTmpVolumes: null
+persistence:
+  accessModes:
+    - ReadWriteMany
+  annotations: {}
+  enabled: false
+  size: 1Gi
+  storageClassName: null
+podAnnotations: {}
+podSecurityContext:
+  enabled: true
+  fsGroup: 1000
+postgresql:
+  auth:
+    database: openproject
+    existingSecret: null
+    password: "<YOUR_POSTGRES_PASSWORD>"
+    postgresPassword: "<YOUR_POSTGRES_PASSWORD>"
+    username: openproject
+  bundled: false
+  connection:
+    host: openproject-postgresql
+    port: 5432
+  global:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      enabled: true
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+probes:
+  liveness:
+    enabled: true
+    failureThreshold: 3
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    successThreshold: 1
+    timeoutSeconds: 3
+  readiness:
+    enabled: true
+    failureThreshold: 30
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+replicaCount: 1
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000"
+s3:
+  auth:
+    accessKeyId: "<YOUR_ACCESS_KEY>"
+    existingSecret: ''
+    secretAccessKey: "<YOUR_ACCESS_KEY>"
+    secretKeys:
+      accessKeyId: accessKeyId
+      secretAccessKey: secretAccessKey
+  bucketName: openproject
+  directUploads: true
+  enableSignatureV4Streaming: true
+  enabled: true
+  endpoint: "http://minio-tenant-hl.minio-tenant.svc.cluster.local:9000"
+  host: "minio-tenant-hl.minio-tenant.svc.cluster.local"
+  pathStyle: true
+  port: "9000"
+  region: "eu-west-rack-0"
+  signatureVersion: 4
+  useIamProfile: false
+seederJob:
+  annotations: {}
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      memory: 512Mi
+service:
+  enabled: true
+  loadBalancerIP: ''
+  ports:
+    http:
+      containerPort: 8080
+      port: 8080
+      protocol: TCP
+  sessionAffinity:
+    enabled: false
+    timeoutSeconds: 10800
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+strategy:
+  type: Recreate
+tolerations: []
+workers:
+  default:
+    queues: ''
+    replicas: 1
+    resources:
+      limits:
+        cpu: '2'
+        memory: 4Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    strategy:
+      type: Recreate
