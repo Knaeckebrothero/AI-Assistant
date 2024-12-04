@@ -11,93 +11,7 @@ One Paragraph of project description goes here. Explain what the project is abou
 - [Contact](#contact)
 - [Acknowledgements](#acknowledgements)
 
-## Installation
-
-### Frontend
-
-#### Setup Developement Backend Mockup
-To simplify frontend development this repository includes a mockup backend written in Python.
-
-```bash
-# Create a virtual environment
-python -m venv venv
-
-# Activate the virtual environment
-# On Windows:
-.\venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install the requirements
-pip install -r requirements.txt
-
-# Start the development server
-uvicorn backend_mockup:app --reload --host 0.0.0.0 --port 8080
-```
-
-#### Setup Frontend
-The frontend is built with Angular. Make sure you have Node.js and npm installed on your system.
-
-1. Install Angular CLI globally if you haven't already:
-```bash
-npm install -g @angular/cli
-```
-
-2. Install project dependencies:
-```bash
-# Navigate to the project directory
-cd frontend-directory
-
-# Install dependencies
-npm install
-```
-
-3. Start the development server:
-```bash
-ng serve
-```
-
-The application will be available at `http://localhost:4200` by default.
-
-#### Development Dependencies
-- Node.js (v16 or higher recommended)
-- npm (comes with Node.js)
-- Python 3.8 or higher
-- Angular CLI (@latest)
-
-#### Additional Commands
-```bash
-# Create a production build
-ng build --production
-
-# Run tests
-ng test
-
-# Check for package updates
-npm outdated
-
-# Update packages (careful with major version updates)
-npm update
-```
-
-#### Common Issues
-- If you encounter CORS issues, make sure the backend server is running and the CORS middleware is properly configured
-- If npm install fails, try deleting the node_modules folder and package-lock.json, then run npm install again
-- Make sure your Node.js version is compatible with the Angular version used in the project
-
-### Backend
-
-## License
-
-This project is licensed under the terms of the Creative Commons Attribution 4.0 International License (CC BY 4.0) and the All Rights Reserved License. See the [LICENSE](LICENSE.txt) file for details.
-
-## Contact
-[Github](https://github.com/Knaeckebrothero) <br>
-[Mail](mailto:OverlyGenericAddress@pm.me) <br>
-
-
-# From Quarkus
-
+## Usage
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
@@ -193,3 +107,10 @@ Easily start your REST Web Services
 Monitor your application's health using SmallRye Health
 
 [Related guide section...](https://quarkus.io/guides/smallrye-health)
+
+## License
+This project is licensed under the terms of the Creative Commons Attribution 4.0 International License (CC BY 4.0) and the All Rights Reserved License. See the [LICENSE](LICENSE.txt) file for details.
+
+## Contact
+[Github](https://github.com/Knaeckebrothero) <br>
+[Mail](mailto:OverlyGenericAddress@pm.me) <br>

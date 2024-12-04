@@ -132,7 +132,6 @@ yarn-error.log
 docs/_build/
 
 # IDEs and editors
-.project
 .classpath
 .c9/
 *.launch
@@ -157,10 +156,6 @@ docs/_build/
 !.vscode/extensions.json
 .history/*
 
-# Eclipse
-.classpath
-.settings/
-
 # Miscellaneous
 /.angular
 /.angular/cache
@@ -174,45 +169,5 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-
-# Gradle
-.gradle/
-build/
-
-# Eclipse
-.project
-.classpath
-.settings/
-bin/
-
-# IntelliJ
-.idea
-*.ipr
-*.iml
-*.iws
-
-# NetBeans
-nb-configuration.xml
-
-# Visual Studio Code
-.vscode
-.factorypath
-
-# OSX
-.DS_Store
-
-# Vim
-*.swp
-*.swo
-
-# patch
-*.orig
-*.rej
-
-# Local environment
-.env
-
-# Plugin directory
-/.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
