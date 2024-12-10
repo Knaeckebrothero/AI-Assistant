@@ -1,27 +1,28 @@
 {
-    "name": "Python Tesseract Dev Container",
-    "image": "mcr.microsoft.com/devcontainers/python:3.11",
-    "features": {
-        "ghcr.io/devcontainers/features/python:1": {},
-        "ghcr.io/devcontainers/features/common-utils:2": {},
-        "ghcr.io/devcontainers-contrib/features/apt-packages:1": {}
+    "name": "Quarkus Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
     },
-    "customizations": {
-        "vscode": {
-            "settings": {
-                "terminal.integrated.defaultProfile.linux": "bash"
-            },
-            "extensions": [
-                "ms-python.python"
-            ]
-        }
-    },
-    "postCreateCommand": "pip install -r requirements.txt",
-    "remoteUser": "vscode",
     "mounts": [
-        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+        // This mounts the host machine's Docker socket into the container
+        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
     ],
-    "remoteEnv": {
-        "PYTHONPATH": "/workspace"
-    }
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "features": {
+        // If you want Docker CLI convenience inside the container:
+        "docker-from-docker": "latest"
+    },
+    "extensions": [
+        "redhat.vscode-xml",           // Helpful for XML config files
+        "redhat.vscode-yaml",          // Helpful for YAML configs (e.g. application.yaml)
+        "vscjava.vscode-java-pack",    // Java support
+        "richardwillis.vscode-gradle", // Gradle tasks in VS Code
+        "quarkusio.quarkus-vscode"     // Quarkus extension
+    ],
+    // Commands to run after the container is created
+    "postCreateCommand": "./gradlew build",
+    "remoteUser": "vscode"
 }
