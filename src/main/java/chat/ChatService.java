@@ -65,7 +65,6 @@ public class ChatService {
             return Response.noContent().build();
         }
 
-        // Convert to DTOs for consistent response format
         List<MessageDTO> messageDTOs = messages.stream()
                 .map(MessageDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -94,7 +93,7 @@ public class ChatService {
         messageRepository.persist(message);
 
         return Response.status(Response.Status.CREATED)
-                .entity(MessageDTO.fromEntity(message))  // return full message DTO
+                .entity(MessageDTO.fromEntity(message))
                 .build();
     }
 
@@ -123,7 +122,7 @@ public class ChatService {
         messageRepository.persist(message);
 
         return Response.status(Response.Status.CREATED)
-                .entity(MessageDTO.fromEntity(message))  // return MessageDTO instead of Message
+                .entity(MessageDTO.fromEntity(message))
                 .build();
     }
 
@@ -159,7 +158,7 @@ public class ChatService {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        // Update conversation last message time if needed
+
         List<Message> remainingMessages = messageRepository.findByConversationId(conversationId);
         if (!remainingMessages.isEmpty()) {
             Conversation conv = conversation.get();

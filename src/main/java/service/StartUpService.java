@@ -32,16 +32,15 @@ public class StartUpService {
 
     @Transactional
     void onStart(@Observes StartupEvent evt) {
-        // Check if test user exists
+
         if (userRepository.findByUserId(1L).isEmpty()) {
             try {
-                // Create test user
+
                 UserDTO userDTO = new UserDTO();
                 userDTO.username ="Test";
                 Long id = 1L;
                 userService.createUserTest(userDTO, id);
 
-                // Create initial message from user
                 MessageDTO userMsg = new MessageDTO();
                 userMsg.conversationId = 1L;
                 userMsg.roleName = "user";
@@ -49,7 +48,6 @@ public class StartUpService {
                 userMsg.time = System.currentTimeMillis() / 1000;
                 chatService.sendMessage(userMsg);
 
-                // Generate AI response
                 GenerateMessageDTO aiMsg = new GenerateMessageDTO();
                 aiMsg.conversationId = 1L;
                 aiMsg.roleName = "assistant";
